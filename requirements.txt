@@ -1,0 +1,5 @@
+django
+playwright
+psycopg2-binary
+asgiref
+pprint
