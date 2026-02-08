@@ -24,6 +24,7 @@ async def main():
     images_list = []
     specs = {}
 
+
     try:
         async with (async_playwright() as p):
             browser = await p.chromium.launch(headless=False)
@@ -46,29 +47,29 @@ async def main():
                 full_name = await page.locator('span.product-clean-name').first.inner_text()
                 product_info["full_name"] = full_name.strip()
 
-            except TimeoutError as e:
-                print("Exception: ", e)
+            except AttributeError as e:
+                product_info["full_name"] = None
 
             try:    #price
                 main_price = await page.locator('div.br-pr-op span').first.inner_text()
                 product_info["main_price"] = int(main_price.replace(' ', ''))
 
             except TimeoutError as e:
-                print("Exception: ", e)
+                product_info["main_price"] = None
 
             try:    #red price
                 red_price = await page.locator('div.br-pr-np span').first.inner_text()
                 product_info["red_price"] = int(red_price.replace(' ', ''))
 
             except TimeoutError as e:
-                print("Exception: ", e)
+                product_info["red_price"] = None
 
             try:    #product code
                 product_code = await page.locator('div#product_code span.br-pr-code-val:visible').first.inner_text()
                 product_info["product_code"] = product_code.strip()
 
             except TimeoutError as e:
-                print("Exception: ", e)
+                product_info["product_code"] = None
 
             try:    #review
                 review = await page.locator('div#br-pr-1 a.brackets-reviews:visible').first.inner_text()
@@ -76,7 +77,7 @@ async def main():
                 product_info["review_count"] = review_count.strip()
 
             except TimeoutError as e:
-                print("Exception: ", e)
+                product_info["review_count"] = None
 
             try:    #images
                 images = await page.locator('div.br-image-links img').all()
@@ -86,7 +87,7 @@ async def main():
                 product_info["images"] = images_list
 
             except Exception as e:
-                print("Exception: ", e)
+                product_info["images"] = None
 
             try:    #characteristics
                 await page.locator("#br-pr-1 a.scroll-to-element-after:visible").first.click()
@@ -105,22 +106,40 @@ async def main():
                 product_info["characteristics"] = specs
 
             except TimeoutError as e:
-                print("Exception: ", e)
+                product_info["characteristics"] = None
 
-            product_info["color"] = specs["Колір"]
-            product_info["memory"] = specs["Вбудована пам'ять"]
-            product_info["producer"] = specs["Виробник"]
-            product_info["diagonal"] = specs["Діагональ екрану"]
-            product_info["resolution"] = specs["Роздільна здатність екрану"]
+            try:
+                product_info["color"] = specs["Колір"]
+            except AttributeError as e:
+                product_info["color"] = None
+            try:
+                product_info["memory"] = specs["Вбудована пам'ять"]
+            except AttributeError as e:
+                product_info["memory"] = None
+            try:
+                product_info["producer"] = specs["Виробник"]
+            except AttributeError as e:
+                product_info["producer"] = None
+            try:
+                product_info["diagonal"] = specs["Діагональ екрану"]
+            except AttributeError as e:
+                product_info["diagonal"] = None
+            try:
+                product_info["resolution"] = specs["Роздільна здатність екрану"]
+            except AttributeError as e:
+                product_info["resolution"] = None
 
 
             await browser.close()
 
     except Exception as e:
         print(f"Error: {e}")
+    
 
     pprint(product_info, sort_dicts=False)
 
+
+"""
     data_to_save = {
         "full_name": product_info["full_name"],
         "product_code": product_info["product_code"],
@@ -137,6 +156,7 @@ async def main():
     }
 
     await sync_to_async(save_data)(data_to_save)
+"""
 
 
 
