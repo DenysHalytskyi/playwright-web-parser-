@@ -134,7 +134,7 @@ async def main():
 
     except Exception as e:
         print(f"Error: {e}")
-    
+    "qwertyu"
 
     pprint(product_info, sort_dicts=False)
 
