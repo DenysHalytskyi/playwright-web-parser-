@@ -44,35 +44,35 @@ async def main():
             await iphone_first.locator('div.br-pp-ipd-hidden > a').click()
 
             try:    #full name
-                full_name = await page.locator('span.product-clean-name').first.inner_text()
+                full_name = await page.locator("//span[contains(@class, 'product-clean-name')]").first.inner_text()
                 product_info["full_name"] = full_name.strip()
 
             except AttributeError as e:
                 product_info["full_name"] = None
 
             try:    #price
-                main_price = await page.locator('div.br-pr-op span').first.inner_text()
+                main_price = await page.locator("//div[contains(@class, 'br-pr-op')]//span").first.inner_text()
                 product_info["main_price"] = int(main_price.replace(' ', ''))
 
             except TimeoutError as e:
                 product_info["main_price"] = None
 
             try:    #red price
-                red_price = await page.locator('div.br-pr-np span').first.inner_text()
+                red_price = await page.locator('//div[contains(@class, "br-pr-np")]//span').first.inner_text()
                 product_info["red_price"] = int(red_price.replace(' ', ''))
 
             except TimeoutError as e:
                 product_info["red_price"] = None
 
             try:    #product code
-                product_code = await page.locator('div#product_code span.br-pr-code-val:visible').first.inner_text()
+                product_code = await page.locator('//div[@id="product_code"]//span[contains(@class, "br-pr-code-val")]').first.inner_text()
                 product_info["product_code"] = product_code.strip()
 
             except TimeoutError as e:
                 product_info["product_code"] = None
 
             try:    #review
-                review = await page.locator('div#br-pr-1 a.brackets-reviews:visible').first.inner_text()
+                review = await page.locator('//div[@id="br-pr-1"]//a[contains(@class, "brackets-reviews")]').first.inner_text()
                 review_count = ''.join(filter(str.isdigit, review))
                 product_info["review_count"] = review_count.strip()
 
@@ -80,7 +80,7 @@ async def main():
                 product_info["review_count"] = None
 
             try:    #images
-                images = await page.locator('div.br-image-links img').all()
+                images = await page.locator('//div[contains(@class, "br-image-links")]//img').all()
                 for image in images:
                     src = await image.get_attribute('src')
                     images_list.append(src)
@@ -90,14 +90,14 @@ async def main():
                 product_info["images"] = None
 
             try:    #characteristics
-                await page.locator("#br-pr-1 a.scroll-to-element-after:visible").first.click()
+                await page.locator('//div[@id="br-pr-1"]//a[contains(@class, "scroll-to-element-after")]').first.click()
                 await page.wait_for_timeout(2000)
 
-                specs_blocks = await page.locator('#br-pr-7 div.br-pr-chr-item').all()
+                specs_blocks = await page.locator('//div[@id="br-pr-7"]//div[contains(@class, "br-pr-chr-item")]').all()
                 for block in specs_blocks:
-                    rows = await block.locator(':scope > div > div').all()
+                    rows = await block.locator('./div/div').all()
                     for row in rows:
-                        spans = await row.locator('span').all()
+                        spans = await row.locator('./span').all()
                         if len(spans) == 2:
                             key = (await spans[0].inner_text()).strip()
                             value = (await spans[1].inner_text()).replace('\xa0', ' ').strip()
@@ -134,7 +134,6 @@ async def main():
 
     except Exception as e:
         print(f"Error: {e}")
-    "qwertyu"
 
     pprint(product_info, sort_dicts=False)
 
