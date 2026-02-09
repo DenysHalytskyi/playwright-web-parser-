@@ -3,8 +3,7 @@
 from load_django import *
 from parser_app.models import *
 import asyncio
-from playwright.async_api import async_playwright
-from playwright.async_api import TimeoutError
+from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
 from pprint import pprint
 from asgiref.sync import sync_to_async
 
@@ -47,28 +46,28 @@ async def main():
                 full_name = await page.locator("//span[contains(@class, 'product-clean-name')]").first.inner_text()
                 product_info["full_name"] = full_name.strip()
 
-            except AttributeError as e:
+            except PlaywrightTimeoutError as e:
                 product_info["full_name"] = None
 
             try:    #price
                 main_price = await page.locator("//div[contains(@class, 'br-pr-op')]//span").first.inner_text()
                 product_info["main_price"] = int(main_price.replace(' ', ''))
 
-            except TimeoutError as e:
+            except PlaywrightTimeoutError as e:
                 product_info["main_price"] = None
 
             try:    #red price
                 red_price = await page.locator('//div[contains(@class, "br-pr-np")]//span').first.inner_text()
                 product_info["red_price"] = int(red_price.replace(' ', ''))
 
-            except TimeoutError as e:
+            except PlaywrightTimeoutError as e:
                 product_info["red_price"] = None
 
             try:    #product code
                 product_code = await page.locator('//div[@id="product_code"]//span[contains(@class, "br-pr-code-val")]').first.inner_text()
                 product_info["product_code"] = product_code.strip()
 
-            except TimeoutError as e:
+            except PlaywrightTimeoutError as e:
                 product_info["product_code"] = None
 
             try:    #review
@@ -76,7 +75,7 @@ async def main():
                 review_count = ''.join(filter(str.isdigit, review))
                 product_info["review_count"] = review_count.strip()
 
-            except TimeoutError as e:
+            except PlaywrightTimeoutError as e:
                 product_info["review_count"] = None
 
             try:    #images
@@ -86,7 +85,7 @@ async def main():
                     images_list.append(src)
                 product_info["images"] = images_list
 
-            except Exception as e:
+            except PlaywrightTimeoutError as e:
                 product_info["images"] = None
 
             try:    #characteristics
@@ -95,9 +94,9 @@ async def main():
 
                 specs_blocks = await page.locator('//div[@id="br-pr-7"]//div[contains(@class, "br-pr-chr-item")]').all()
                 for block in specs_blocks:
-                    rows = await block.locator('./div/div').all()
+                    rows = await block.locator('xpath=./div/div').all()
                     for row in rows:
-                        spans = await row.locator('./span').all()
+                        spans = await row.locator('xpath=./span').all()
                         if len(spans) == 2:
                             key = (await spans[0].inner_text()).strip()
                             value = (await spans[1].inner_text()).replace('\xa0', ' ').strip()
@@ -105,29 +104,14 @@ async def main():
 
                 product_info["characteristics"] = specs
 
-            except TimeoutError as e:
+            except PlaywrightTimeoutError as e:
                 product_info["characteristics"] = None
 
-            try:
-                product_info["color"] = specs["Колір"]
-            except AttributeError as e:
-                product_info["color"] = None
-            try:
-                product_info["memory"] = specs["Вбудована пам'ять"]
-            except AttributeError as e:
-                product_info["memory"] = None
-            try:
-                product_info["producer"] = specs["Виробник"]
-            except AttributeError as e:
-                product_info["producer"] = None
-            try:
-                product_info["diagonal"] = specs["Діагональ екрану"]
-            except AttributeError as e:
-                product_info["diagonal"] = None
-            try:
-                product_info["resolution"] = specs["Роздільна здатність екрану"]
-            except AttributeError as e:
-                product_info["resolution"] = None
+            product_info["color"] = specs.get("Колір")
+            product_info["memory"] = specs.get("Вбудована пам'ять")
+            product_info["producer"] = specs.get("Виробник")
+            product_info["diagonal"] = specs.get("Діагональ екрану")
+            product_info["resolution"] = specs.get("Роздільна здатність екрану")
 
 
             await browser.close()
@@ -136,7 +120,6 @@ async def main():
         print(f"Error: {e}")
 
     pprint(product_info, sort_dicts=False)
-
 
     data_to_save = {
         "full_name": product_info["full_name"],
@@ -154,7 +137,6 @@ async def main():
     }
 
     await sync_to_async(save_data)(data_to_save)
-
 
 
 if __name__ == "__main__":
