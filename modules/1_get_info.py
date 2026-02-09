@@ -138,7 +138,6 @@ async def main():
     pprint(product_info, sort_dicts=False)
 
 
-"""
     data_to_save = {
         "full_name": product_info["full_name"],
         "product_code": product_info["product_code"],
@@ -155,7 +154,6 @@ async def main():
     }
 
     await sync_to_async(save_data)(data_to_save)
-"""
 
 
 
